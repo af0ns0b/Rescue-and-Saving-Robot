@@ -1,0 +1,74 @@
+
+#include <stdio.h>
+#include <math.h>
+
+// Define a structure to hold 3D coordinates
+typedef struct {
+    double x;
+    double y;
+    double z;
+} Point3D;
+
+// Function to convert degrees to radians
+double deg2rad(double degrees) {
+    return degrees * M_PI / 180.0;
+}
+
+// Function to convert radians to degrees
+double rad2deg(double radians) {
+    return radians * 180.0 / M_PI;
+}
+
+// Function to convert ECEF to ENU
+void ecef2enu(Point3D ecef, Point3D ref_ecef, double ref_lat, double ref_lon, Point3D *enu) {
+    double phi = deg2rad(ref_lat);
+    double lambda = deg2rad(ref_lon);
+
+    double cos_phi = cos(phi);
+    double sin_phi = sin(phi);
+    double cos_lambda = cos(lambda);
+    double sin_lambda = sin(lambda);
+
+    // Calculate the rotation matrix
+    double rotation[3][3] = {
+        {-sin_lambda,            cos_lambda,            0},
+        {-sin_phi * cos_lambda, -sin_phi * sin_lambda, cos_phi},
+        {cos_phi * cos_lambda,  cos_phi * sin_lambda,  sin_phi}
+    };
+
+    // Subtract reference point from target point
+    double dx = ecef.x - ref_ecef.x;
+    double dy = ecef.y - ref_ecef.y;
+    double dz = ecef.z - ref_ecef.z;
+
+    // Apply rotation matrix
+    enu->x = rotation[0][0] * dx + rotation[0][1] * dy + rotation[0][2] * dz;
+    enu->y = rotation[1][0] * dx + rotation[1][1] * dy + rotation[1][2] * dz;
+    enu->z = rotation[2][0] * dx + rotation[2][1] * dy + rotation[2][2] * dz;
+}
+
+int main() {
+    // Coordinates of reference point (latitude, longitude, altitude)
+    double ref_lat = 37.7749;  // Example latitude (San Francisco)
+    double ref_lon = -122.4194;  // Example longitude (San Francisco)
+    double ref_alt = 0;  // Altitude (not used in this example)
+
+    // Coordinates of target point in ECEF (x, y, z)
+    Point3D ecef_point = {6378137, 0, 0};  // Example ECEF coordinates (equator)
+
+    // Coordinates of reference point in ECEF (x, y, z)
+    Point3D ref_ecef_point = {
+        (6378137 + ref_alt) * cos(deg2rad(ref_lat)) * cos(deg2rad(ref_lon)),
+        (6378137 + ref_alt) * cos(deg2rad(ref_lat)) * sin(deg2rad(ref_lon)),
+        (6378137 + ref_alt) * sin(deg2rad(ref_lat))
+    };
+
+    // Convert ECEF to ENU
+    Point3D enu_point;
+    ecef2enu(ecef_point, ref_ecef_point, ref_lat, ref_lon, &enu_point);
+
+    // Output ENU coordinates
+    printf("ENU coordinates: (%f, %f, %f)\n", enu_point.x, enu_point.y, enu_point.z);
+
+    return 0;
+}
