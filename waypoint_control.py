@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 import math
 
@@ -64,69 +66,76 @@ def angCB(a):
   vel_maxang = a.data
   print "Max angular speed is set to: " + str(vel_maxang)  
 
-# Init ROS node
-rospy.init_node('waypoint_control')
+def main():
+  # Init ROS node
+  rospy.init_node('waypoint_control')
 
-# Publishers
-vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
-state_pub = rospy.Publisher('waypoint/robot_state', String, queue_size = 10)
+  # Publishers
+  vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
+  state_pub = rospy.Publisher('waypoint/robot_state', String, queue_size = 10)
 
-# Subscribers
-state_sub = rospy.Subscriber('waypoint/state', String, stateCB)
-pose_sub = rospy.Subscriber('robot_pose', Pose2D, poseCB)
-goal_sub = rospy.Subscriber('waypoint/goal', Point, goalCB)
-para_sub = rospy.Subscriber('waypoint/control_parameters', String, paraCB)
-maxlin_sub = rospy.Subscriber('waypoint/max_linear_speed', Float32, linCB)
-maxang_sub = rospy.Subscriber('waypoint/max_angular_speed', Float32, angCB)
+  # Subscribers
+  state_sub = rospy.Subscriber('waypoint/state', String, stateCB)
+  pose_sub = rospy.Subscriber('robot_pose', Pose2D, poseCB)
+  goal_sub = rospy.Subscriber('waypoint/goal', Point, goalCB)
+  para_sub = rospy.Subscriber('waypoint/control_parameters', String, paraCB)
+  maxlin_sub = rospy.Subscriber('waypoint/max_linear_speed', Float32, linCB)
+  maxang_sub = rospy.Subscriber('waypoint/max_angular_speed', Float32, angCB)
 
-rate = rospy.Rate(100)
+  rate = rospy.Rate(100)
 
-while not rospy.is_shutdown():
+  while not rospy.is_shutdown():
 
-  if goal_set:
-    if state == "RUNNING":
-      if substate != "FORWARDING":
-        substate = "TURNING"    
+   if goal_set:
+     if state == "RUNNING":
+       if substate != "FORWARDING":
+         substate = "TURNING"    
     
-      if substate == "TURNING":
-        vel.linear.x = 0
-        vel.angular.z = k2 * angle
-        if math.fabs(angle) < 0.2:
-          substate = "FORWARDING"        
-      elif substate == "FORWARDING":
-      	if (angle > math.pi/2):
-          vel.linear.x = -k1 * distance
-          vel.angular.z = k2 * (angle-math.pi)  
-        elif (angle < -math.pi/2):
-          vel.linear.x = -k1 * distance
-          vel.angular.z = k2 * (angle+math.pi)  
-        else:
-          vel.linear.x = k1 * distance
-          vel.angular.z = k2 * angle 
+       if substate == "TURNING":
+          vel.linear.x = 0
+          vel.angular.z = k2 * angle
+          if math.fabs(angle) < 0.2:
+           substate = "FORWARDING"        
+       elif substate == "FORWARDING":
+       	if (angle > math.pi/2):
+           vel.linear.x = -k1 * distance
+           vel.angular.z = k2 * (angle-math.pi)  
+         elif (angle < -math.pi/2):
+           vel.linear.x = -k1 * distance
+           vel.angular.z = k2 * (angle+math.pi)  
+          else:
+            vel.linear.x = k1 * distance
+            vel.angular.z = k2 * angle 
     
-      if vel.linear.x > vel_maxlin:
-        vel.linear.x = vel_maxlin
-      if vel.angular.z > vel_maxang:
-        vel.angular.z = vel_maxang
+       if vel.linear.x > vel_maxlin:
+         vel.linear.x = vel_maxlin
+       if vel.angular.z > vel_maxang:
+         vel.angular.z = vel_maxang
      
-      vel_pub.publish(vel)
+       vel_pub.publish(vel)
       
-    elif state == "PARK":
+     elif state == "PARK":
       substate = "STOP"
       vel.linear.x = 0
       vel.angular.z = 0
       vel_pub.publish(vel)
       
-    else:
+     else:
       if prestate == "RUNNING":
-        substate = "STOP"
-        vel.linear.x = 0
-        vel.angular.z = 0
-        vel_pub.publish(vel)
+       substate = "STOP"
+       vel.linear.x = 0
+       vel.angular.z = 0
+       vel_pub.publish(vel)
       else:
         substate = "IDLE"
         
-    prestate = state
+     prestate = state
         
   state_pub.publish(substate)
   rate.sleep()
+
+if __name__ == '__main__':
+  try:
+    main()
+  except rospy.ROSInterruptExecption:
+    pass
