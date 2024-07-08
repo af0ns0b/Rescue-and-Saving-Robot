@@ -53,7 +53,7 @@ def main():
     pose.y = robot_y
     pose.theta = math.atan2( (waypoint_y-robot_y), (waypoint_x-robot_x) ) + math.pi / 2.0
     if pose.theta > math.pi:
-      pose.theta = pose.theta - 2.0 * math.pi
+      pose.theta = pose.theta - math.pi
     pose_pub.publish(pose)
     
     # Publish robot position in GPS
@@ -63,7 +63,7 @@ def main():
     # Publish robot heading, 0-359 degrees, North: 0, East: 90
     heading_rad =-math.atan2( (waypoint_y-robot_y), (waypoint_x-robot_x) )
     if heading_rad < 0:
-      heading_rad = heading_rad + 2.0 * math.pi
+      heading_rad = heading_rad + math.pi
     heading = math.fabs(heading_rad) / math.pi * 180.0
     robot_heading_pub.publish(heading)
 
