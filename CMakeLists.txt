@@ -164,6 +164,7 @@ include_directories(
  catkin_install_python(PROGRAMS
    src/waypoint_control.py
    src/waypoint_convert.py
+   src/waypoint_publisher.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
