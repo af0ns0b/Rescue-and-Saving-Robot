@@ -4,7 +4,6 @@ import rospy # type: ignore
 import math
 
 from geometry_msgs.msg import Point, Pose2D, Twist # x,y,z / x,y,theta / linear,angular
-from std_msgs.msg import String, Float32 # data
 
 # Variables
 global goal_set, distance, angle, goal, vel
@@ -22,12 +21,11 @@ def goalCB(g):
   global goal_set, goal, substate
   goal = g
   goal_set = True
-  substate = "STOP"
 
 
 def poseCB(pose):
   global goal_set, distance, angle, goal
-  if goal_set:
+  if goal_set == True:
     dx = (goal.x-pose.x)*math.cos(pose.theta)+(goal.y-pose.y)*math.sin(pose.theta)
     dy = -(goal.x-pose.x)*math.sin(pose.theta)+(goal.y-pose.y)*math.cos(pose.theta)
     distance = math.sqrt( (dx)**2 + (dy)**2 )
@@ -51,7 +49,7 @@ def main():
 
   while not rospy.is_shutdown():
     print ("Begin 2")
-    if goal_set:
+    if goal_set == True:
       if distance > 0.2:
         if angle > 0.2:
           vel.linear = 0.8
